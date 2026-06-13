@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product Order</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    padding:10px;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin-bottom:10px;
+}
+
+button{
+    padding:8px;
+}
+
+.product{
+    border:1px solid #ccc;
+    padding:10px;
+    margin-bottom:5px;
+}
+
+.cart{
+    border:1px solid green;
+    padding:10px;
+    margin-bottom:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h3 id="customerName"></h3>
+
+<input
+type="text"
+id="search"
+placeholder="Search Product"
+onkeyup="filterProducts()">
+
+<h3>Products</h3>
+
+<div id="productList"></div>
+
+<hr>
+
+<h3>
+Cart Items :
+<span id="cartCount">0</span>
+</h3>
+
+<div id="cartList"></div>
+
+<br>
+
+<button onclick="saveOrder()">
+PLACE ORDER
+</button>
+
+<script>
+
+let products = [];
+let cart = [];
+
+/* Show Customer Name */
+
+const customer =
+JSON.parse(
+localStorage.getItem("customer")
+);
+
+document.getElementById(
+"customerName"
+).innerHTML =
+"Welcome " + customer.name;
+
+/* Load Products */
+
+async function loadProducts(){
+
+    const response =
+    await fetch('/products');
+
+    products =
+    await response.json();
+
+    showProducts(products);
+
+}
+
+/* Show Products */
+
+function showProducts(list){
+
+    let html = '';
+
+    list.forEach(p=>{
+
+        html += `
+        <div class="product">
+
+            ${p.name}
+
+            <button
+            onclick="addToCart(
+            '${p.prod_id}',
+            '${p.name}')">
+
+            Add
+
+            </button>
+
+        </div>
+        `;
+
+    });
+
+    document.getElementById(
+    'productList'
+    ).innerHTML = html;
+
+}
+
+/* Search */
+
+function filterProducts(){
+
+    const txt =
+    document.getElementById(
+    'search'
+    ).value.toLowerCase();
+
+    const filtered =
+    products.filter(p=>
+
+        p.name
+        .toLowerCase()
+        .includes(txt)
+
+    );
+
+    showProducts(filtered);
+
+}
+
+/* Add Product */
+
+function addToCart(id,name){
+
+    const item =
+    cart.find(x=>
+    x.prod_id == id);
+
+    if(item){
+
+        item.qty++;
+
+    }else{
+
+        cart.push({
+
+            prod_id:id,
+            name:name,
+            qty:1
+
+        });
+
+    }
+
+    refreshCart();
+
+}
+
+/* Cart Refresh */
+
+function refreshCart(){
+
+    let html='';
+
+    cart.forEach(item=>{
+
+        html += `
+
+        <div class="cart">
+
+        ${item.name}
+
+        <button
+        onclick="minusQty('${item.prod_id}')">
+        -
+        </button>
+
+        ${item.qty}
+
+        <button
+        onclick="plusQty('${item.prod_id}')">
+        +
+        </button>
+
+        </div>
+
+        `;
+
+    });
+
+    document.getElementById(
+    'cartList'
+    ).innerHTML = html;
+
+    document.getElementById(
+    'cartCount'
+    ).innerHTML = cart.length;
+
+}
+
+/* Plus */
+
+function plusQty(id){
+
+    const item =
+    cart.find(x=>
+    x.prod_id == id);
+
+    item.qty++;
+
+    refreshCart();
+
+}
+
+/* Minus */
+
+function minusQty(id){
+
+    const item =
+    cart.find(x=>
+    x.prod_id == id);
+
+    item.qty--;
+
+    if(item.qty <= 0){
+
+        cart =
+        cart.filter(x=>
+        x.prod_id != id);
+
+    }
+
+    refreshCart();
+
+}
+
+/* Save Order */
+
+async function saveOrder(){
+
+    if(cart.length == 0){
+
+        alert(
+        "Please Select Product"
+        );
+
+        return;
+
+    }
+
+    const order = {
+
+        customer_id:
+        customer.cus_id,
+
+        customer_name:
+        customer.name,
+
+        order_date:
+        new Date(),
+
+        status:
+        "Pending",
+
+        items:
+        cart
+
+    };
+
+    const response =
+    await fetch('/saveorder',{
+
+        method:'POST',
+
+        headers:{
+            'Content-Type':
+            'application/json'
+        },
+
+        body:
+        JSON.stringify(order)
+
+    });
+
+    const result =
+    await response.json();
+
+    if(result.success){
+
+        alert(
+        "Order Saved"
+        );
+
+        cart=[];
+
+        refreshCart();
+
+    }
+
+}
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
