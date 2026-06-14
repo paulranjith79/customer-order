@@ -3,23 +3,55 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Product Order</title>
 
 <style>
 
 body{
     font-family:Arial;
-    padding:10px;
+    margin:0;
+    padding:0;
 }
 
-input{
+/* Fixed Header */
+
+.header{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    background:white;
+    padding:10px;
+    border-bottom:1px solid #ccc;
+    z-index:1000;
+}
+
+.header input{
     width:100%;
     padding:10px;
+    box-sizing:border-box;
     margin-bottom:10px;
 }
 
-button{
-    padding:8px;
+.header button{
+    padding:10px;
+}
+
+/* Message */
+
+#msg{
+    margin-top:5px;
+    color:green;
+    font-weight:bold;
+    min-height:20px;
+}
+
+/* Product Area */
+
+.content{
+    margin-top:170px;
+    padding:10px;
 }
 
 .product{
@@ -28,10 +60,52 @@ button{
     margin-bottom:5px;
 }
 
-.cart{
-    border:1px solid green;
+.product button{
+    float:right;
+}
+
+/* Cart Panel */
+
+.cartPopup{
+    position:fixed;
+    top:0;
+    right:-350px;
+    width:320px;
+    height:100%;
+    background:white;
+    border-left:1px solid #ccc;
+    overflow:auto;
+    transition:0.3s;
+    z-index:2000;
+    padding:10px;
+}
+
+.cartPopup.show{
+    right:0;
+}
+
+.cartItem{
+    border:1px solid #ccc;
     padding:10px;
     margin-bottom:5px;
+}
+
+.cartItem button{
+    width:35px;
+    height:35px;
+}
+
+.closeBtn{
+    float:right;
+}
+
+.placeBtn{
+    width:100%;
+    padding:12px;
+    background:green;
+    color:white;
+    border:none;
+    font-size:16px;
 }
 
 </style>
@@ -40,49 +114,100 @@ button{
 
 <body>
 
-<h3 id="customerName"></h3>
+<!-- HEADER -->
 
-<input
-type="text"
-id="search"
-placeholder="Search Product"
-onkeyup="filterProducts()">
+<div class="header">
 
-<h3>Products</h3>
+    <h3 id="customerName"></h3>
 
-<div id="productList"></div>
+    <input
+    type="text"
+    id="search"
+    placeholder="Search Product"
+    onkeyup="filterProducts()">
 
-<hr>
+    <button onclick="openCart()">
+        View Cart
+        (<span id="cartCount">0</span>)
+    </button>
 
-<h3>
-Cart Items :
-<span id="cartCount">0</span>
-</h3>
+    <div id="msg"></div>
 
-<div id="cartList"></div>
+</div>
 
-<br>
+<!-- PRODUCTS -->
 
-<button onclick="saveOrder()">
-PLACE ORDER
-</button>
+<div class="content">
+
+    <h3>Products</h3>
+
+    <div id="productList"></div>
+
+</div>
+
+<!-- CART -->
+
+<div id="cartPopup" class="cartPopup">
+
+    <h3>
+        Cart
+        <button
+        class="closeBtn"
+        onclick="closeCart()">
+        X
+        </button>
+    </h3>
+
+    <div id="cartList"></div>
+
+    <br>
+
+    <button
+    class="placeBtn"
+    onclick="saveOrder()">
+    PLACE ORDER
+    </button>
+
+</div>
 
 <script>
 
 let products = [];
 let cart = [];
 
-/* Show Customer Name */
+/* Customer */
 
 const customer =
 JSON.parse(
 localStorage.getItem("customer")
 );
 
-document.getElementById(
-"customerName"
-).innerHTML =
-"Welcome " + customer.name;
+if(customer){
+
+    document.getElementById(
+    "customerName"
+    ).innerHTML =
+    "Welcome " + customer.name;
+
+}
+
+/* Message */
+
+function showMessage(text){
+
+    document.getElementById(
+    "msg"
+    ).innerHTML = text;
+
+    setTimeout(function(){
+
+        document.getElementById(
+        "msg"
+        ).innerHTML = "";
+
+    },2000);
+
+}
 
 /* Load Products */
 
@@ -102,7 +227,7 @@ async function loadProducts(){
 
 function showProducts(list){
 
-    let html = '';
+    let html='';
 
     list.forEach(p=>{
 
@@ -126,7 +251,7 @@ function showProducts(list){
     });
 
     document.getElementById(
-    'productList'
+    "productList"
     ).innerHTML = html;
 
 }
@@ -137,8 +262,9 @@ function filterProducts(){
 
     const txt =
     document.getElementById(
-    'search'
-    ).value.toLowerCase();
+    "search"
+    ).value
+    .toLowerCase();
 
     const filtered =
     products.filter(p=>
@@ -163,49 +289,65 @@ function addToCart(id,name){
 
     if(item){
 
-        item.qty++;
+        showMessage(
+        name +
+        " already added"
+        );
 
-    }else{
-
-        cart.push({
-
-            prod_id:id,
-            name:name,
-            qty:1
-
-        });
+        return;
 
     }
 
+    cart.push({
+
+        prod_id:id,
+        name:name,
+        qty:1
+
+    });
+
     refreshCart();
+
+    showMessage(
+    name +
+    " added to cart"
+    );
 
 }
 
-/* Cart Refresh */
+/* Refresh Cart */
 
 function refreshCart(){
 
     let html='';
 
+    let totalQty=0;
+
     cart.forEach(item=>{
+
+        totalQty += item.qty;
 
         html += `
 
-        <div class="cart">
+        <div class="cartItem">
 
-        ${item.name}
+            <b>${item.name}</b>
 
-        <button
-        onclick="minusQty('${item.prod_id}')">
-        -
-        </button>
+            <br><br>
 
-        ${item.qty}
+            <button
+            onclick="minusQty(
+            '${item.prod_id}')">
+            -
+            </button>
 
-        <button
-        onclick="plusQty('${item.prod_id}')">
-        +
-        </button>
+            ${item.qty}
+
+            <button
+            onclick="plusQty(
+            '${item.prod_id}')">
+            +
+            </button>
 
         </div>
 
@@ -214,12 +356,12 @@ function refreshCart(){
     });
 
     document.getElementById(
-    'cartList'
+    "cartList"
     ).innerHTML = html;
 
     document.getElementById(
-    'cartCount'
-    ).innerHTML = cart.length;
+    "cartCount"
+    ).innerHTML = totalQty;
 
 }
 
@@ -259,11 +401,37 @@ function minusQty(id){
 
 }
 
+/* Open Cart */
+
+function openCart(){
+
+    document
+    .getElementById(
+    "cartPopup"
+    )
+    .classList
+    .add("show");
+
+}
+
+/* Close Cart */
+
+function closeCart(){
+
+    document
+    .getElementById(
+    "cartPopup"
+    )
+    .classList
+    .remove("show");
+
+}
+
 /* Save Order */
 
 async function saveOrder(){
 
-    if(cart.length == 0){
+    if(cart.length==0){
 
         alert(
         "Please Select Product"
@@ -319,6 +487,8 @@ async function saveOrder(){
         cart=[];
 
         refreshCart();
+
+        closeCart();
 
     }
 
