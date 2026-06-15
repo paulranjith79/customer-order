@@ -9,7 +9,7 @@
 <style>
 
 body{
-    font-family: Arial, sans-serif;
+    font-family:Arial,sans-serif;
     max-width:400px;
     margin:auto;
     padding:20px;
@@ -17,24 +17,34 @@ body{
 
 h2{
     text-align:center;
+    margin-bottom:25px;
 }
 
 input{
     width:100%;
     padding:12px;
-    margin-top:10px;
-    margin-bottom:10px;
     font-size:16px;
     box-sizing:border-box;
 }
 
-.row{
-    display:flex;
-    gap:10px;
+.mobile-box{
+    margin-bottom:15px;
 }
 
-.row input{
-    flex:1;
+.dob-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.dob-row input{
+    text-align:center;
+}
+
+.separator{
+    font-size:24px;
+    font-weight:bold;
 }
 
 button{
@@ -44,53 +54,102 @@ button{
     cursor:pointer;
 }
 
+.help{
+    font-size:13px;
+    color:#666;
+    margin-bottom:8px;
+}
+
 </style>
-
 </head>
-
 <body>
 
 <h2>Customer Login</h2>
 
-<input
-type="tel"
-id="phone"
-placeholder="Mobile Number"
-maxlength="10"
-autocomplete="off">
-
-<div class="row">
+<div class="mobile-box">
 
     <input
-    type="number"
-    id="birthDate"
-    placeholder="Date"
-    min="1"
-    max="31"
-    autocomplete="off">
+    type="tel"
+    id="phone"
+    name="phone"
+    list="mobileHistory"
+    placeholder="Mobile Number"
+    maxlength="10"
+    autocomplete="tel">
 
-    <input
-    type="number"
-    id="birthMonth"
-    placeholder="Month"
-    min="1"
-    max="12"
-    autocomplete="off">
+    <datalist id="mobileHistory"></datalist>
 
 </div>
 
-<button onclick="login()">
+<div class="help">
+Birth Date / Month
+</div>
+
+<div class="dob-row">
+
+    <input
+    type="tel"
+    id="birthDate"
+    placeholder="DD"
+    maxlength="2"
+    inputmode="numeric">
+
+    <div class="separator">/</div>
+
+    <input
+    type="tel"
+    id="birthMonth"
+    placeholder="MM"
+    maxlength="2"
+    inputmode="numeric">
+
+</div>
+
+<button
+id="loginBtn"
+onclick="login()">
 Login
 </button>
 
 <script>
 
-// Initial focus
+// Load saved mobile numbers
 window.onload = function(){
-    document.getElementById("phone").focus();
+
+    loadMobileHistory();
+
+    document
+    .getElementById("phone")
+    .focus();
+
 };
 
-// Mobile number only
+function loadMobileHistory(){
+
+    const numbers =
+    JSON.parse(
+        localStorage.getItem("mobileHistory") || "[]"
+    );
+
+    const list =
+    document.getElementById("mobileHistory");
+
+    list.innerHTML = "";
+
+    numbers.forEach(num => {
+
+        const option =
+        document.createElement("option");
+
+        option.value = num;
+
+        list.appendChild(option);
+
+    });
+
+}
+
+// Mobile number
 document.getElementById("phone")
 .addEventListener("input", function(){
 
@@ -104,7 +163,6 @@ document.getElementById("phone")
 
     }
 
-    // Auto move to Date
     if(this.value.length === 10){
 
         document
@@ -115,21 +173,36 @@ document.getElementById("phone")
 
 });
 
-// Date only
+// Birth Date
 document.getElementById("birthDate")
 .addEventListener("input", function(){
 
     this.value =
     this.value.replace(/\D/g,'');
 
-    if(Number(this.value) > 31){
+    if(this.value.length > 2){
 
-        this.value = 31;
+        this.value =
+        this.value.substring(0,2);
 
     }
 
-    // Auto move to Month
-    if(this.value.length >= 2){
+    const val = this.value;
+
+    // Single digit 4-9
+    if(
+        val.length === 1 &&
+        Number(val) >= 4
+    ){
+
+        document
+        .getElementById("birthMonth")
+        .focus();
+
+    }
+
+    // Two digits entered
+    if(val.length === 2){
 
         document
         .getElementById("birthMonth")
@@ -139,22 +212,46 @@ document.getElementById("birthDate")
 
 });
 
-// Month only
+// Birth Month
 document.getElementById("birthMonth")
 .addEventListener("input", function(){
 
     this.value =
     this.value.replace(/\D/g,'');
 
-    if(Number(this.value) > 12){
+    if(this.value.length > 2){
 
-        this.value = 12;
+        this.value =
+        this.value.substring(0,2);
+
+    }
+
+    const val = this.value;
+
+    // First digit 2-9 => move immediately
+    if(
+        val.length === 1 &&
+        Number(val) >= 2
+    ){
+
+        document
+        .getElementById("loginBtn")
+        .focus();
+
+    }
+
+    // Two digits entered => move
+    if(val.length === 2){
+
+        document
+        .getElementById("loginBtn")
+        .focus();
 
     }
 
 });
 
-// Enter key support
+// Enter key
 document.addEventListener("keydown", function(e){
 
     if(e.key === "Enter"){
@@ -176,7 +273,7 @@ async function login(){
     const birthMonth =
     document.getElementById("birthMonth").value.trim();
 
-    // Mobile validation
+    // Mobile Validation
 
     if(!/^\d{10}$/.test(phone)){
 
@@ -187,12 +284,16 @@ async function login(){
         document
         .getElementById("phone")
         .focus();
+        const phoneBox =
+        document.getElementById("phone");
 
+        phoneBox.focus();
+        phoneBox.select();
         return;
 
     }
 
-    // Date validation
+    // Date Validation
 
     if(
         birthDate === "" ||
@@ -207,12 +308,16 @@ async function login(){
         document
         .getElementById("birthDate")
         .focus();
+        const birthDateBox =
+        document.getElementById("birthDate");
 
+        birthDateBox.focus();
+        birthDateBox.select();
         return;
 
     }
 
-    // Month validation
+    // Month Validation
 
     if(
         birthMonth === "" ||
@@ -227,7 +332,11 @@ async function login(){
         document
         .getElementById("birthMonth")
         .focus();
+        const birthMonthBox =
+        document.getElementById("birthMonth");
 
+        birthMonthBox.focus();
+        birthMonthBox.select();
         return;
 
     }
@@ -257,6 +366,26 @@ async function login(){
         await response.json();
 
         if(data.success){
+
+            // Save mobile number history
+
+            let numbers =
+            JSON.parse(
+                localStorage.getItem(
+                    "mobileHistory"
+                ) || "[]"
+            );
+
+            if(!numbers.includes(phone)){
+
+                numbers.push(phone);
+
+                localStorage.setItem(
+                    "mobileHistory",
+                    JSON.stringify(numbers)
+                );
+
+            }
 
             localStorage.setItem(
                 "customer",
