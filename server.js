@@ -22,69 +22,47 @@ app.listen(3000, () => {
 });
 app.use(express.json());
 
-app.post('/login', async (req,res)=>{
+app.post('/login', async (req, res) => {
 
-    try{
+    const { phone, birthDate, birthMonth } = req.body;
 
-        const phone =
-        Number(req.body.phone);
+    const customer =
+    await db.collection("customers").findOne({
+        phone: Number(phone)
+    });
 
-        const dobStart =
-        new Date(req.body.dob);
+    if(!customer){
 
-        const dobEnd =
-        new Date(req.body.dob);
-
-        dobEnd.setDate(
-            dobEnd.getDate() + 1
-        );
-
-        const customer =
-        await db.collection("customers")
-        .findOne({
-
-            phone: phone,
-
-            dob: {
-                $gte: dobStart,
-                $lt: dobEnd
-            }
-
-        });
-
-        if(customer){
-
-            res.json({
-
-                success:true,
-                customer:customer
-
-            });
-
-        }
-        else{
-
-            res.json({
-
-                success:false
-
-            });
-
-        }
-
-    }
-    catch(err){
-
-        console.log(err);
-
-        res.status(500).json({
-
-            success:false,
-            error:err.message
-
+        return res.json({
+            success:false
         });
 
     }
+
+    const dob =
+    new Date(customer.dob);
+
+    const day =
+    dob.getDate();
+
+    const month =
+    dob.getMonth() + 1;
+
+    if(
+        day === Number(birthDate) &&
+        month === Number(birthMonth)
+    ){
+
+        return res.json({
+            success:true,
+            customer
+        });
+
+    }
+
+    return res.json({
+        success:false
+    });
 
 });
 
