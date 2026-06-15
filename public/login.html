@@ -3,44 +3,81 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>Customer Login</title>
 
 <style>
+
 body{
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     max-width:400px;
     margin:auto;
     padding:20px;
 }
 
+h2{
+    text-align:center;
+}
+
 input{
     width:100%;
-    padding:10px;
+    padding:12px;
     margin-top:10px;
     margin-bottom:10px;
+    font-size:16px;
     box-sizing:border-box;
+}
+
+.row{
+    display:flex;
+    gap:10px;
+}
+
+.row input{
+    flex:1;
 }
 
 button{
     width:100%;
     padding:12px;
+    font-size:16px;
     cursor:pointer;
 }
+
 </style>
 
 </head>
+
 <body>
 
 <h2>Customer Login</h2>
 
 <input
-type="text"
+type="tel"
 id="phone"
-placeholder="Mobile Number">
+placeholder="Mobile Number"
+maxlength="10"
+autocomplete="off">
 
-<input
-type="date"
-id="dob">
+<div class="row">
+
+    <input
+    type="number"
+    id="birthDate"
+    placeholder="Date"
+    min="1"
+    max="31"
+    autocomplete="off">
+
+    <input
+    type="number"
+    id="birthMonth"
+    placeholder="Month"
+    min="1"
+    max="12"
+    autocomplete="off">
+
+</div>
 
 <button onclick="login()">
 Login
@@ -48,24 +85,149 @@ Login
 
 <script>
 
+// Initial focus
+window.onload = function(){
+    document.getElementById("phone").focus();
+};
+
+// Mobile number only
+document.getElementById("phone")
+.addEventListener("input", function(){
+
+    this.value =
+    this.value.replace(/\D/g,'');
+
+    if(this.value.length > 10){
+
+        this.value =
+        this.value.substring(0,10);
+
+    }
+
+    // Auto move to Date
+    if(this.value.length === 10){
+
+        document
+        .getElementById("birthDate")
+        .focus();
+
+    }
+
+});
+
+// Date only
+document.getElementById("birthDate")
+.addEventListener("input", function(){
+
+    this.value =
+    this.value.replace(/\D/g,'');
+
+    if(Number(this.value) > 31){
+
+        this.value = 31;
+
+    }
+
+    // Auto move to Month
+    if(this.value.length >= 2){
+
+        document
+        .getElementById("birthMonth")
+        .focus();
+
+    }
+
+});
+
+// Month only
+document.getElementById("birthMonth")
+.addEventListener("input", function(){
+
+    this.value =
+    this.value.replace(/\D/g,'');
+
+    if(Number(this.value) > 12){
+
+        this.value = 12;
+
+    }
+
+});
+
+// Enter key support
+document.addEventListener("keydown", function(e){
+
+    if(e.key === "Enter"){
+
+        login();
+
+    }
+
+});
+
 async function login(){
 
     const phone =
     document.getElementById("phone").value.trim();
 
-    const dob =
-    document.getElementById("dob").value;
+    const birthDate =
+    document.getElementById("birthDate").value.trim();
 
-    if(phone === ""){
+    const birthMonth =
+    document.getElementById("birthMonth").value.trim();
 
-        alert("Enter Mobile Number");
+    // Mobile validation
+
+    if(!/^\d{10}$/.test(phone)){
+
+        alert(
+            "Please enter a valid 10 digit mobile number"
+        );
+
+        document
+        .getElementById("phone")
+        .focus();
+
         return;
 
     }
 
-    if(dob === ""){
+    // Date validation
 
-        alert("Select DOB");
+    if(
+        birthDate === "" ||
+        Number(birthDate) < 1 ||
+        Number(birthDate) > 31
+    ){
+
+        alert(
+            "Please enter a valid birth date"
+        );
+
+        document
+        .getElementById("birthDate")
+        .focus();
+
+        return;
+
+    }
+
+    // Month validation
+
+    if(
+        birthMonth === "" ||
+        Number(birthMonth) < 1 ||
+        Number(birthMonth) > 12
+    ){
+
+        alert(
+            "Please enter a valid birth month"
+        );
+
+        document
+        .getElementById("birthMonth")
+        .focus();
+
         return;
 
     }
@@ -84,7 +246,8 @@ async function login(){
             body:JSON.stringify({
 
                 phone:phone,
-                dob:dob
+                birthDate:Number(birthDate),
+                birthMonth:Number(birthMonth)
 
             })
 
@@ -100,25 +263,38 @@ async function login(){
                 JSON.stringify(data.customer)
             );
 
-            location.href="order.html";
+            location.href =
+            "order.html";
 
         }
         else{
 
             alert(
-                "Invalid Mobile Number or DOB"
+                "Invalid Mobile Number or Birth Details"
             );
+
+            document
+            .getElementById("phone")
+            .focus();
+
+            document
+            .getElementById("phone")
+            .select();
 
         }
 
     }
     catch(err){
 
-        console.log(err);
+        console.error(err);
 
         alert(
-            "Server Error"
+            "Server Error. Please try again."
         );
+
+        document
+        .getElementById("phone")
+        .focus();
 
     }
 
