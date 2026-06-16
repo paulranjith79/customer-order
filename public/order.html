@@ -184,8 +184,42 @@ body{
 
 <div id="cartPopup" class="cartPopup">
 
-    <h3>Cart</h3>
+    <div style="
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;">
 
+    <h3 style="margin:0;">Cart</h3>
+
+    <button
+    onclick="closeCart()"
+    style="
+    background:red;
+    color:white;
+    border:none;
+    padding:5px 10px;
+    border-radius:4px;">
+    ✖
+    </button>
+
+</div>
+
+
+
+<div style="
+background:#e7f3ff;
+padding:8px;
+margin-bottom:10px;
+font-size:13px;
+border:1px solid #b6d4fe;
+border-radius:4px;">
+To add more products, click Continue Shopping.<br>
+To remove a product, enter Qty = 0.
+</div>
+    <div id="cartList"></div>
+
+    <br>
     <button
     onclick="closeCart()"
     style="
@@ -198,21 +232,6 @@ body{
     border-radius:4px;">
     ← Continue Shopping
     </button>
-
-    <div style="
-    background:#e7f3ff;
-    padding:8px;
-    margin-bottom:10px;
-    font-size:13px;
-    border:1px solid #b6d4fe;
-    border-radius:4px;">
-    To add more products, click Continue Shopping.<br>
-    To remove a product, enter Qty = 0.
-    </div>
-    <div id="cartList"></div>
-
-    <br>
-
     <button
     class="placeBtn"
     onclick="saveOrder()">
