@@ -475,6 +475,10 @@ function changeQty(id,qty){
         cart.filter(x =>
         x.prod_id != id);
 
+        showMessage(
+        "Item removed from cart"
+        );
+
     }
     else{
 
@@ -526,24 +530,21 @@ async function saveOrder(){
 
     }
 
-    const order = {
+   const order = {
 
-        customer_id:
-        customer.cus_id,
+    order_id:
+    pendingOrderId,
 
-        customer_name:
-        customer.name,
+    customer_id:
+    customer.cus_id,
 
-        order_date:
-        new Date(),
+    customer_name:
+    customer.name,
 
-        status:
-        "Pending",
+    items:
+    cart
 
-        items:
-        cart
-
-    };
+};
 
     const response =
     await fetch('/saveorder',{
@@ -563,23 +564,72 @@ async function saveOrder(){
     const result =
     await response.json();
 
-    if(result.success){
+  if(result.success){
 
-        alert(
-        "Order Saved"
-        );
+    alert(
+    result.message
+    );
 
-        cart=[];
+    closeCart();
 
-        refreshCart();
+    if(result.order_id){
 
-        closeCart();
-
+        pendingOrderId =
+        result.order_id;
     }
 
 }
+else{
+
+    alert(
+    result.message
+    );
+
+    pendingOrderId = null;
+
+    cart = [];
+
+    refreshCart();
+
+    closeCart();
+
+}
+
+}
+
+let pendingOrderId = null;
+async function loadPendingOrder(){
+
+    const response =
+    await fetch('/pendingorder/' + customer.cus_id);
+
+    const order =
+    await response.json();
+
+if(order){
+
+    pendingOrderId =
+    order._id;
+
+    cart =
+    order.items || [];
+
+    refreshCart();
+
+    showMessage(
+    "Pending order loaded"
+    );
+
+}
+
+}
+
+
+
+
 
 loadProducts();
+loadPendingOrder();
 
 </script>
 
