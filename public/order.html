@@ -305,16 +305,18 @@ function showProducts(list){
         <div class="product">
 
             <span>
-                ${p.name}
+                <b>${p.name_tam || p.name}</b><br>
+                <small>${p.name}</small>
             </span>
 
             <div class="productRight">
 
                
                 <button
-                onclick="addToCart(
-                '${p.prod_id}',
-                '${p.name}')">
+               onclick="addToCart(
+                    '${p.prod_id}',
+                    '${p.name}',
+                    '${p.name_tam || ""}')">
 
                 Add
 
@@ -358,7 +360,7 @@ function filterProducts(){
 
 /* Add Product */
 
-function addToCart(id,name){
+function addToCart(id,name,name_tam){
 
     const item =
     cart.find(x =>
@@ -367,14 +369,14 @@ function addToCart(id,name){
     if(item){
 
         showMessage(
-        name + " already added in cart"
+        name_tam + " already added in cart"
         );
 
         return;
     }
 
     let qty = prompt(
-    "Enter Quantity for " + name,
+    "Enter Quantity for " + name_tam,
     "1"
     );
 
@@ -395,6 +397,7 @@ function addToCart(id,name){
 
         prod_id:id,
         name:name,
+        name_tam:name_tam,        
         qty:qty
 
     });
@@ -402,7 +405,7 @@ function addToCart(id,name){
     refreshCart();
 
     showMessage(
-    name + " added to cart"
+    name_tam + " added to cart"
     );
 
 }
@@ -422,8 +425,7 @@ function refreshCart(){
         html += `
         <div class="cartItem">
 
-            <b>${item.name}</b>
-
+            <b>${item.name_tam}</b>
             <br><br>
 
             Qty :
