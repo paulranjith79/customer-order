@@ -14,6 +14,28 @@ body{
     padding:0;
 }
 
+.product{
+    border:1px solid #ccc;
+    padding:10px;
+    margin-bottom:5px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.productRight{
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+
+.productQty{
+    width:60px;
+    padding:5px;
+    text-align:center;
+}
+
 /* Fixed Header */
 
 .header{
@@ -63,7 +85,17 @@ body{
 .product button{
     float:right;
 }
+.productQty{
+    width:60px;
+    padding:5px;
+    margin-left:10px;
+    margin-right:10px;
+}
 
+.cartQty{
+    width:80px;
+    padding:5px;
+}
 /* Cart Panel */
 
 .cartPopup{
@@ -127,8 +159,11 @@ body{
     onkeyup="filterProducts()">
 
     <button onclick="openCart()">
-        View Cart
-        (<span id="cartCount">0</span>)
+    View Cart
+    (Items:
+    <span id="cartCount">0</span>,
+    Qty:
+    <span id="totalQty">0</span>)
     </button>
 
     <div id="msg"></div>
@@ -157,7 +192,16 @@ body{
         X
         </button>
     </h3>
-
+    <div style="
+    background:#fff3cd;
+    color:#856404;
+    padding:8px;
+    margin-bottom:10px;
+    border:1px solid #ffeeba;
+    border-radius:4px;
+    font-size:13px;">
+    Tip: To remove a product from cart, enter Qty = 0.
+    </div>
     <div id="cartList"></div>
 
     <br>
@@ -234,16 +278,23 @@ function showProducts(list){
         html += `
         <div class="product">
 
-            ${p.name}
+            <span>
+                ${p.name}
+            </span>
 
-            <button
-            onclick="addToCart(
-            '${p.prod_id}',
-            '${p.name}')">
+            <div class="productRight">
 
-            Add
+               
+                <button
+                onclick="addToCart(
+                '${p.prod_id}',
+                '${p.name}')">
 
-            </button>
+                Add
+
+                </button>
+
+            </div>
 
         </div>
         `;
@@ -284,33 +335,48 @@ function filterProducts(){
 function addToCart(id,name){
 
     const item =
-    cart.find(x=>
+    cart.find(x =>
     x.prod_id == id);
 
     if(item){
 
         showMessage(
-        name +
-        " already added"
+        name + " already added in cart"
         );
 
         return;
+    }
 
+    let qty = prompt(
+    "Enter Quantity for " + name,
+    "1"
+    );
+
+    if(qty === null) return;
+
+    qty = Number(qty);
+
+    if(isNaN(qty) || qty <= 0){
+
+        alert(
+        "Please enter valid quantity"
+        );
+
+        return;
     }
 
     cart.push({
 
         prod_id:id,
         name:name,
-        qty:1
+        qty:qty
 
     });
 
     refreshCart();
 
     showMessage(
-    name +
-    " added to cart"
+    name + " added to cart"
     );
 
 }
@@ -321,36 +387,33 @@ function refreshCart(){
 
     let html='';
 
-    let totalQty=0;
+    let totalQty = 0;
 
     cart.forEach(item=>{
 
         totalQty += item.qty;
 
         html += `
-
         <div class="cartItem">
 
             <b>${item.name}</b>
 
             <br><br>
 
-            <button
-            onclick="minusQty(
-            '${item.prod_id}')">
-            -
-            </button>
+            Qty :
 
-            ${item.qty}
-
-            <button
-            onclick="plusQty(
-            '${item.prod_id}')">
-            +
-            </button>
+            <input
+            type="number"
+            min="0"
+            value="${item.qty}"
+            class="cartQty"
+            onchange="
+            changeQty(
+            '${item.prod_id}',
+            this.value
+            )">
 
         </div>
-
         `;
 
     });
@@ -361,39 +424,33 @@ function refreshCart(){
 
     document.getElementById(
     "cartCount"
+    ).innerHTML = cart.length;
+
+    document.getElementById(
+    "totalQty"
     ).innerHTML = totalQty;
-
 }
 
-/* Plus */
+function changeQty(id,qty){
 
-function plusQty(id){
-
-    const item =
-    cart.find(x=>
-    x.prod_id == id);
-
-    item.qty++;
-
-    refreshCart();
-
-}
-
-/* Minus */
-
-function minusQty(id){
+    qty = Number(qty);
 
     const item =
-    cart.find(x=>
+    cart.find(x =>
     x.prod_id == id);
 
-    item.qty--;
+    if(!item) return;
 
-    if(item.qty <= 0){
+    if(qty <= 0){
 
         cart =
-        cart.filter(x=>
+        cart.filter(x =>
         x.prod_id != id);
+
+    }
+    else{
+
+        item.qty = qty;
 
     }
 
