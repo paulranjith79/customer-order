@@ -106,13 +106,12 @@ app.get('/pendingorder/:cusid', async (req, res) => {
     .findOne({
 
         customer_id:
-        req.params.cusid,
+        Number(req.params.cusid),
 
         status:
         "Pending"
 
     });
-
     res.json(order || null);
 
 });
