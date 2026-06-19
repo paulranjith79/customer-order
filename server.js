@@ -290,3 +290,53 @@ app.post('/markdownloaded', async (req, res) => {
     });
 
 });
+app.post('/login_flower_pks', async (req, res) => {
+
+    const {
+        mob_no,
+        birthDate,
+        birthMonth
+    } = req.body;
+
+    const customer =
+    await db.collection("tbl_mer_mas")
+    .findOne({
+        mob_no: String(mob_no)
+    });
+    // console.log("Customer Found:");
+     //   console.log(customer);
+
+    if (!customer) {
+
+        return res.json({
+            success: false
+        });
+
+    }
+
+    const dob =
+    new Date(customer.dob);
+
+    const day =
+    dob.getDate();
+
+    const month =
+    dob.getMonth() + 1;
+
+    if (
+        day === Number(birthDate) &&
+        month === Number(birthMonth)
+    ) {
+
+        return res.json({
+            success: true,
+            customer
+        });
+
+    }
+
+    return res.json({
+        success: false
+    });
+
+});
