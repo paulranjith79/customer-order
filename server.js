@@ -15,7 +15,8 @@ const client = new MongoClient(process.env.MONGO_URI);
 
 await client.connect();
 
-const db = client.db("Shop_kutti");
+const db = client.db(process.env.MONGO_DB);
+const db_flower_pks = client.db(process.env.MONGO_DB_FLOWER_PKS);
 
 console.log("Mongo Connected");
 
@@ -38,10 +39,12 @@ app.post('/login', async (req, res) => {
 
     const customer =
     await db.collection("customers")
+    
     .findOne({
         phone: Number(phone)
     });
-
+     //console.log("Records Found:");
+        //console.log(customer);
     if (!customer) {
 
         return res.json({
@@ -299,12 +302,12 @@ app.post('/login_flower_pks', async (req, res) => {
     } = req.body;
 
     const customer =
-    await db.collection("tbl_mer_mas")
+    await db_flower_pks.collection("tbl_mer_mas")
     .findOne({
         mob_no: String(mob_no)
     });
-    // console.log("Customer Found:");
-     //   console.log(customer);
+     //console.log("Records Found:");
+       // console.log(customer);
 
     if (!customer) {
 
@@ -338,5 +341,21 @@ app.post('/login_flower_pks', async (req, res) => {
     return res.json({
         success: false
     });
+
+});
+
+app.get('/ledger/:id', async (req, res) => {
+
+    const data =
+    await db_flower_pks.collection("tbl_mer_ledger_mas")
+    .find({
+        id: req.params.id
+    })
+    .sort({
+        dt: 1
+    })
+    .toArray();
+
+    res.json(data);
 
 });
