@@ -302,30 +302,23 @@ function showProducts(list){
     list.forEach(p=>{
 
         html += `
-        <div class="product">
+    <div class="product">
 
-            <span>
-                <b>${p.name_tam || p.name}</b><br>
-                <small>${p.name}</small>
-            </span>
+        <button
+        onclick="addToCart(
+            '${p.prod_id}',
+            '${p.name}',
+            '${p.name_tam || ""}')">
+            Add
+        </button>
 
-            <div class="productRight">
-
-               
-                <button
-               onclick="addToCart(
-                    '${p.prod_id}',
-                    '${p.name}',
-                    '${p.name_tam || ""}')">
-
-                Add
-
-                </button>
-
-            </div>
-
+        <div style="margin-left:10px;flex:1;">
+            <b>${p.name_tam || p.name}</b><br>
+            <small>${p.name}</small>
         </div>
-        `;
+
+    </div>
+    `;
 
     });
 
