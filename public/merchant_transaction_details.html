@@ -237,8 +237,10 @@ async function loadLedger(){
                 "en-GB"
             );
 
+
             const opening =
-            Number(item.opg || 0);
+            Number(item.opg || 0) +
+            Number(item.opg_pur || 0);
 
             const receipt =
             Number(item.rec || 0);
@@ -257,9 +259,32 @@ async function loadLedger(){
 
             details =
             details
-            .replace(/^,\s*/,'')
+            .replace(/^,\s*/, '')
             .split(',')
-            .map(x => x.trim())
+            .map(x => {
+
+                x = x.trim();
+
+                const match = x.match(/^(.*?)\s+([\d.]+)x([\d.]+)$/);
+
+                if(match){
+
+                    const itemName = match[1];
+                    const qty = Number(match[2]);
+                    const rate = Number(match[3]);
+                    const amount = qty * rate;
+                    const qtyDisplay =
+                        Number.isInteger(qty)
+                        ? qty.toString()
+                        : qty.toFixed(3);                    
+
+                    return `${itemName} ${qtyDisplay} x ${rate} = ${amount.toLocaleString()}`;
+
+                }
+
+                return x;
+
+            })
             .filter(x => x !== '')
             .join('<br>');
 
