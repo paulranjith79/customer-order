@@ -1,7 +1,10 @@
 import express from 'express';
+import session from 'express-session';
 import { MongoClient, ObjectId } from 'mongodb';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import { downloadOrders } from './downloadorders.js';
+import path from 'path';
 
 dotenv.config();
 
@@ -10,6 +13,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+
+
+app.use(session({
+    secret: 'my-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        //maxAge: 24 * 60 * 60 * 1000 // 1 day
+        maxAge: 2 * 60 * 1000 // 2 min
+    }
+}));
 
 const client = new MongoClient(process.env.MONGO_URI);
 
@@ -66,6 +80,11 @@ app.post('/login', async (req, res) => {
         day === Number(birthDate) &&
         month === Number(birthMonth)
     ) {
+
+        req.session.customer = {
+            id: customer.id,
+            phone: customer.phone
+        };
 
         return res.json({
             success: true,
@@ -357,5 +376,169 @@ app.get('/ledger/:id', async (req, res) => {
     .toArray();
 
     res.json(data);
+
+});
+
+
+app.get('/pending-order-count', checkAdmin, async (req, res) => {
+    const ordersCollection = db.collection('orders');
+    const count = await ordersCollection.countDocuments({
+        status: 'Pending'
+    });
+
+    res.json({
+        count
+    });
+
+});
+
+
+app.get('/download-orders', checkAdmin, async (req, res) => {
+
+    try {
+
+        const result = await downloadOrders();
+
+        res.json({
+            success: true,
+            count: result?.count || 0
+        });
+
+    }
+    catch (err) {
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+
+});
+
+app.post('/admin-login', (req, res) => {
+
+    const { password } = req.body;
+
+    if (password === process.env.ADMIN_PASSWORD) {
+
+        req.session.isAdmin = true;
+
+        res.json({
+            success: true
+        });
+
+    } else {
+
+        res.json({
+            success: false,
+            message: 'Invalid Password'
+        });
+
+    }
+
+});
+
+function checkAdmin(req, res, next) {
+
+    if (req.session.isAdmin) {
+        next();
+    } else {
+        res.status(401).json({
+            success: false,
+            message: 'Please login'
+        });
+    }
+
+}
+
+app.get('/admin-check', (req, res) => {
+
+    res.json({
+        loggedIn: !!req.session.isAdmin
+    });
+
+});
+
+app.get('/admin-logout', (req, res) => {
+
+    req.session.destroy(() => {
+
+        res.json({
+            success: true
+        });
+
+    });
+
+});
+
+app.get('/downloadorders', (req, res) => {
+
+    if (!req.session.isAdmin) {
+
+        //return res.redirect('/login1.html');
+    res.sendFile(
+        path.join(process.cwd(),
+        'private',
+        'login_admin_devadas.html')
+    );        
+
+    }
+
+    res.sendFile(
+        path.join(process.cwd(),
+        'private',
+        'downloadorders.html')
+    );
+
+});
+
+app.get('/devadas', (req, res) => {
+
+    res.sendFile(
+        path.join(process.cwd(),
+        'private',
+        'login_devadas.html')
+    );
+
+});
+app.get('/devadas-admin', (req, res) => {
+
+    res.sendFile(
+        path.join(process.cwd(),
+        'private',
+        'login_admin_devadas.html')
+    );
+
+});
+
+app.get('/order', (req, res) => {
+
+
+
+
+    //if (!req.session.customer) {
+    //    return res.redirect('/');
+    //}
+
+    if (!req.session.customer) {
+
+        //return res.redirect('/login1.html');
+    res.sendFile(
+        path.join(process.cwd(),
+        'private',
+        'login_devadas.html')
+    );        
+
+    }
+
+
+    res.sendFile(
+        path.join(
+            process.cwd(),
+            'private',
+            'order.html'
+        )
+    );
 
 });

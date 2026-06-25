@@ -43,7 +43,7 @@ async function migrateProducts() {
 
         // Read Table 2
         const result2 = await sql.query(`
-            SELECT * FROM dbo.tbl_mer_ledger_mas where dt>='31/oct/24'
+            SELECT * FROM dbo.tbl_mer_ledger_mas WHERE dt >= DATEADD(DAY, -40, GETDATE())
         `);
 
        
@@ -59,6 +59,12 @@ async function migrateProducts() {
             det_rec:item.det_rec,
             det_pay:item.det_pay,            
             det_pur_auc:item.det_pur_auc,
+            opg_pur:item.opg_pur,
+            closed_pur:item.closed_pur,
+            clg_pur:item.clg_pur,
+            commn:item.commn,
+            clg_after_commn:item.clg_after_commn,
+            det_pay_closed:item.det_pay_closed,
             syncDate: new Date()
         }));
 
